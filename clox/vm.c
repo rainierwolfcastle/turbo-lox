@@ -546,40 +546,6 @@ static InterpretResult run(void) {
             case OP_METHOD:
                 define_method(READ_STRING());
                 break;
-            case OP_NEW_LIST: {
-                ObjList *list = new_list();
-
-                uint8_t count = (uint8_t) AS_NUMBER(pop());
-                for (uint8_t i = 0; i < count; i++) {
-                    write_value_array(&list->elements, pop());
-                }
-
-                push(OBJ_VAL(list));
-                break;
-            }
-            case OP_GET_LIST: {
-                Value index_value = pop();
-                ObjList *list = AS_LIST(pop());
-
-                uint32_t index = validate_index(index_value, list->elements.count, "Subscript");
-                if (index == UINT32_MAX) return INTERPRET_RUNTIME_ERROR;
-
-                push(list->elements.values[index]);
-                break;
-            }
-            case OP_SET_LIST: {
-                Value list_value = pop();
-                Value index_value = pop();
-                ObjList *list = AS_LIST(pop());
-
-                uint32_t index = validate_index(index_value, list->elements.count, "Subscript");
-                if (index == UINT32_MAX) return INTERPRET_RUNTIME_ERROR;
-
-                list->elements.values[index] = list_value;
-
-                push(OBJ_VAL(list));
-                break;
-            }
             case OP_MOD: {
                 if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) {
                     runtime_error("Operands must be numbers.");
@@ -713,9 +679,6 @@ static InterpretResult run(void) {
         &&OP_CLASS,
         &&OP_INHERIT,
         &&OP_METHOD,
-        &&OP_NEW_LIST,
-        &&OP_GET_LIST,
-        &&OP_SET_LIST,
         &&OP_MOD,
         &&OP_BAND,
         &&OP_BXOR,
@@ -1008,40 +971,6 @@ OP_INHERIT: {
 }
 OP_METHOD: {
     define_method(READ_STRING());
-    DISPATCH();
-}
-OP_NEW_LIST: {
-    ObjList *list = new_list();
-
-    uint8_t count = (uint8_t) AS_NUMBER(POP());
-    for (uint8_t i = 0; i < count; i++) {
-        write_value_array(&list->elements, POP());
-    }
-
-    PUSH(OBJ_VAL(list));
-    DISPATCH();
-}
-OP_GET_LIST: {
-    Value index_value = POP();
-    ObjList *list = AS_LIST(POP());
-
-    uint32_t index = validate_index(index_value, list->elements.count, "Subscript");
-    if (index == UINT32_MAX) return INTERPRET_RUNTIME_ERROR;
-
-    PUSH(list->elements.values[index]);
-    DISPATCH();
-}
-OP_SET_LIST: {
-    Value list_value = POP();
-    Value index_value = POP();
-    ObjList *list = AS_LIST(POP());
-
-    uint32_t index = validate_index(index_value, list->elements.count, "Subscript");
-    if (index == UINT32_MAX) return INTERPRET_RUNTIME_ERROR;
-
-    list->elements.values[index] = list_value;
-
-    PUSH(OBJ_VAL(list));
     DISPATCH();
 }
 OP_MOD: {

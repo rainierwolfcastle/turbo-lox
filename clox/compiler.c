@@ -453,33 +453,6 @@ static void literal(bool can_assign) {
     }
 }
 
-static void list(bool can_assign) {
-    uint8_t count = 0;
-    do {
-        if (check(TOKEN_RIGHT_SQUARE_BRACKET)) break;
-        if (count == UINT8_MAX) error("Can't have more than 255 elements.");
-        expression();
-        count++;
-    } while (match(TOKEN_COMMA));
-
-    emit_constant(NUMBER_VAL(count));
-    emit_byte(OP_NEW_LIST);
-
-    consume(TOKEN_RIGHT_SQUARE_BRACKET, "Expect ']' after list elements.");
-}
-
-static void subscript(bool can_assign) {
-    expression();
-    consume(TOKEN_RIGHT_SQUARE_BRACKET, "Expect ']' after arguments.");
-    
-    if (can_assign && match(TOKEN_EQUAL)) {
-        expression();
-        emit_byte(OP_SET_LIST);
-    } else {
-        emit_byte(OP_GET_LIST);
-    }
-}
-
 static void grouping(bool can_assign) {
     expression();
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
@@ -623,8 +596,6 @@ ParseRule rules[] = {
     [TOKEN_WHILE]                = {NULL,        NULL,      PREC_NONE},
     [TOKEN_ERROR]                = {NULL,        NULL,      PREC_NONE},
     [TOKEN_EOF]                  = {NULL,        NULL,      PREC_NONE},
-    [TOKEN_LEFT_SQUARE_BRACKET]  = {list,        subscript, PREC_CALL},
-    [TOKEN_RIGHT_SQUARE_BRACKET] = {NULL,        NULL,      PREC_NONE},
     [TOKEN_PERCENT]              = {NULL,        binary,    PREC_TERM},
     [TOKEN_AMPERSAND]            = {NULL,        binary,    PREC_BAND},
     [TOKEN_TILDE]                = {NULL,        binary,    PREC_BXOR},
